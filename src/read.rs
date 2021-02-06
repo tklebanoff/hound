@@ -213,37 +213,37 @@ pub struct WavSpecEx {
 }
 
 /// Specifies properties from the clm header
-#[derive(Clone, Copy)]
+#[derive(Debug,Clone, Copy)]
 pub struct ClmSpec {
 
 }
 
 /// Specifies properties from the uhWT header
-#[derive(Clone, Copy)]
+#[derive(Debug,Clone, Copy)]
 pub struct UhwtSpec {
 
 }
 
 /// Specifies properties from the srge header
-#[derive(Clone, Copy)]
+#[derive(Debug,Clone, Copy)]
 pub struct SrgeSpec {
 
 }
 
 /// Specifies properties from the srgo header
-#[derive(Clone, Copy)]
+#[derive(Debug,Clone, Copy)]
 pub struct SrgoSpec {
 
 }
 
 /// Specifies properties from the cue header
-#[derive(Clone, Copy)]
+#[derive(Debug,Clone, Copy)]
 pub struct CueSpec {
 
 }
 
 /// Specifies properties from the smpl header
-#[derive(Clone, Copy)]
+#[derive(Debug,Clone, Copy)]
 pub struct SmplSpec {
 
 }
