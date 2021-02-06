@@ -182,6 +182,12 @@ impl<R> ReadExt for R
 /// The different chunks that a WAVE file can contain.
 enum ChunkKind {
     Fmt,
+    Clm,
+    Uhwt,
+    Srge,
+    Srgo,
+    Cue,
+    Smpl,
     Fact,
     Data,
     Unknown,
@@ -206,6 +212,55 @@ pub struct WavSpecEx {
     pub bytes_per_sample: u16,
 }
 
+/// Specifies properties from the clm header
+#[derive(Clone, Copy)]
+pub struct ClmSpec {
+
+}
+
+/// Specifies properties from the uhWT header
+#[derive(Clone, Copy)]
+pub struct UhwtSpec {
+
+}
+
+/// Specifies properties from the srge header
+#[derive(Clone, Copy)]
+pub struct SrgeSpec {
+
+}
+
+/// Specifies properties from the srgo header
+#[derive(Clone, Copy)]
+pub struct SrgoSpec {
+
+}
+
+/// Specifies properties from the cue header
+#[derive(Clone, Copy)]
+pub struct CueSpec {
+
+}
+
+/// Specifies properties from the smpl header
+#[derive(Clone, Copy)]
+pub struct SmplSpec {
+
+}
+
+/// Specifies all audio properties form WavSpecEx, 
+/// with additional properties specified for Surge
+#[derive(Clone, Copy)]
+pub struct WavSpecSurge {
+    pub specx: Option<WavSpecEx>,
+    pub clm:   Option<ClmSpec>,
+    pub uhwt:  Option<UhwtSpec>,
+    pub srge:  Option<SrgeSpec>,
+    pub srgo:  Option<SrgoSpec>,
+    pub cue:   Option<CueSpec>,
+    pub smpl:  Option<SmplSpec>,
+}
+
 /// A reader that reads the WAVE format from the underlying reader.
 ///
 /// A `WavReader` is a streaming reader. It reads data from the underlying
@@ -215,7 +270,7 @@ pub struct WavSpecEx {
 /// takes care of this for you.
 pub struct WavReader<R> {
     /// Specification of the file as found in the fmt chunk.
-    spec: WavSpec,
+    surge_spec: WavSpecSurge,
 
     /// The number of bytes used to store a sample in the stream.
     bytes_per_sample: u16,
@@ -289,16 +344,41 @@ pub fn read_wave_header<R: io::Read>(reader: &mut R) -> Result<u64> {
 /// Returns the information from the fmt chunk and the length of the data
 /// chunk in bytes. Afterwards, the reader will be positioned at the first
 /// content byte of the data chunk.
-pub fn read_until_data<R: io::Read>(mut reader: R) -> Result<(WavSpecEx, u32)> {
-    let mut spec_opt = None;
+pub fn read_until_data<R: io::Read>(mut reader: R) -> Result<(WavSpecSurge, u32)> {
+
+    let mut surge_spec_opt = None;
 
     loop {
         let header = try!(WavReader::read_chunk_header(&mut reader));
         match header.kind {
             ChunkKind::Fmt => {
-                let spec = try!(WavReader::read_fmt_chunk(&mut reader, header.len));
-                spec_opt = Some(spec);
+                let specx = try!(WavReader::read_fmt_chunk(&mut reader, header.len));
+                surge_spec_opt.specx = Some(specx);
             }
+            ChunkKind::Clm => {
+                let clm = try!(WavReader::read_clm_chunk(&mut reader, header.len));
+                surge_spec_opt.clm = Some(clm);
+            },
+            ChunkKind::Uhwt => {
+                let uhwt = try!(WavReader::read_uhwt_chunk(&mut reader, header.len));
+                surge_spec_opt.uhwt = Some(uhwt);
+            },
+            ChunkKind::Srge => {
+                let srge = try!(WavReader::read_srge_chunk(&mut reader, header.len));
+                surge_spec_opt.srge = Some(srge);
+            },
+            ChunkKind::Srgo => {
+                let srgo = try!(WavReader::read_srgo_chunk(&mut reader, header.len));
+                surge_spec_opt.srgo = Some(srgo);
+            },
+            ChunkKind::Cue => {
+                let cue = try!(WavReader::read_cue_chunk(&mut reader, header.len));
+                surge_spec_opt.cue = Some(cue);
+            },
+            ChunkKind::Smpl => {
+                let smpl = try!(WavReader::read_smpl_chunk(&mut reader, header.len));
+                surge_spec_opt.smpl = Some(smpl);
+            },
             ChunkKind::Fact => {
                 // All (compressed) non-PCM formats must have a fact chunk
                 // (Rev. 3 documentation). The chunk contains at least one
@@ -315,7 +395,7 @@ pub fn read_until_data<R: io::Read>(mut reader: R) -> Result<(WavSpecEx, u32)> {
             ChunkKind::Data => {
                 // The "fmt" chunk must precede the "data" chunk. Any
                 // chunks that come after the data chunk will be ignored.
-                if let Some(spec) = spec_opt {
+                if let Some(spec) = surge_spec_opt {
                     return Ok((spec, header.len));
                 } else {
                     return Err(Error::FormatError("missing fmt chunk"));
@@ -344,6 +424,12 @@ impl<R> WavReader<R>
             b"fmt " => ChunkKind::Fmt,
             b"fact" => ChunkKind::Fact,
             b"data" => ChunkKind::Data,
+            b"clm " => ChunkKind::Clm,
+            b"uhWT" => ChunkKind::Uhwt,
+            b"srge" => ChunkKind::Srge,
+            b"srgo" => ChunkKind::Srgo,
+            b"cue " => ChunkKind::Cue,
+            b"smpl" => ChunkKind::Smpl,
             _ => ChunkKind::Unknown,
         };
 
@@ -447,6 +533,36 @@ impl<R> WavReader<R>
             EXTENSIBLE => WavReader::read_wave_format_extensible(reader, chunk_len, spec),
             _ => Err(Error::Unsupported),
         }
+    }
+
+    /// Reads the clm chunk of the file, returns the information it provides.
+    fn read_clm_chunk(reader: &mut R, chunk_len: u32) -> Result<ClmSpec> {
+
+    }
+
+    /// Reads the uhwt chunk of the file, returns the information it provides.
+    fn read_uhwt_chunk(reader: &mut R, chunk_len: u32) -> Result<UhwtSpec> {
+
+    }
+
+    /// Reads the srge chunk of the file, returns the information it provides.
+    fn read_uhwt_chunk(reader: &mut R, chunk_len: u32) -> Result<SrgeSpec> {
+
+    }
+
+    /// Reads the srgo chunk of the file, returns the information it provides.
+    fn read_srgo_chunk(reader: &mut R, chunk_len: u32) -> Result<SrgoSpec> {
+
+    }
+
+    /// Reads the cue chunk of the file, returns the information it provides.
+    fn read_cue_chunk(reader: &mut R, chunk_len: u32) -> Result<CueSpec> {
+
+    }
+
+    /// Reads the smpl chunk of the file, returns the information it provides.
+    fn read_smpl_chunk(reader: &mut R, chunk_len: u32) -> Result<SmplSpec> {
+
     }
 
     fn read_wave_format_pcm(mut reader: R, chunk_len: u32, spec: WavSpec) -> Result<WavSpecEx> {
@@ -597,16 +713,16 @@ impl<R> WavReader<R>
     /// demand.
     pub fn new(mut reader: R) -> Result<WavReader<R>> {
         try!(read_wave_header(&mut reader));
-        let (spec_ex, data_len) = try!(read_until_data(&mut reader));
+        let (surge_spec, data_len) = try!(read_until_data(&mut reader));
 
-        let num_samples = data_len / spec_ex.bytes_per_sample as u32;
+        let num_samples = data_len / surge_spec.specx.bytes_per_sample as u32;
 
         // It could be that num_samples * bytes_per_sample < data_len.
         // If data_len is not a multiple of bytes_per_sample, there is some
         // trailing data. Either somebody is playing some steganography game,
         // but more likely something is very wrong, and we should refuse to
         // decode the file, as it is invalid.
-        if num_samples * spec_ex.bytes_per_sample as u32 != data_len {
+        if num_samples * surge_spec.specx.bytes_per_sample as u32 != data_len {
             let msg = "data chunk length is not a multiple of sample size";
             return Err(Error::FormatError(msg));
         }
@@ -614,13 +730,13 @@ impl<R> WavReader<R>
         // The number of samples must be a multiple of the number of channels,
         // otherwise the last inter-channel sample would not have data for all
         // channels.
-        if num_samples % spec_ex.spec.channels as u32 != 0 {
+        if num_samples % surge_spec.specx.spec.channels as u32 != 0 {
             return Err(Error::FormatError("invalid data chunk length"));
         }
 
         let wav_reader = WavReader {
-            spec: spec_ex.spec,
-            bytes_per_sample: spec_ex.bytes_per_sample,
+            spec: surge_spec,
+            bytes_per_sample: surge_spec.specx.bytes_per_sample,
             num_samples: num_samples,
             samples_read: 0,
             reader: reader,
@@ -631,7 +747,7 @@ impl<R> WavReader<R>
 
     /// Returns information about the WAVE file.
     pub fn spec(&self) -> WavSpec {
-        self.spec
+        self.surge_spec.specx.spec
     }
 
     /// Returns an iterator over all samples.
@@ -673,7 +789,7 @@ impl<R> WavReader<R>
     /// dividing this number by the sample rate. The duration is independent of
     /// how many samples have been read already.
     pub fn duration(&self) -> u32 {
-        self.num_samples / self.spec.channels as u32
+        self.num_samples / self.surge_spec.specx.spec.channels as u32
     }
 
     /// Returns the number of values that the sample iterator will yield.
@@ -704,7 +820,7 @@ impl<R> WavReader<R>
     pub fn seek(&mut self, time: u32) -> io::Result<()>
         where R: io::Seek,
     {
-        let bytes_per_sample = self.spec.bits_per_sample / 8;
+        let bytes_per_sample = self.surge_spec.specx.spec.bits_per_sample / 8;
         let sample_position = time * self.spec.channels as u32;
         let offset_samples = sample_position as i64 - self.samples_read as i64;
         let offset_bytes = offset_samples * bytes_per_sample as i64;
