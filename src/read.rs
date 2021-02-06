@@ -770,6 +770,11 @@ impl<R> WavReader<R>
         self.surge_spec.specx.spec
     }
 
+    /// Returns information about the WAVE file.
+    pub fn surge_spec(&self) -> WavSpecSurge {
+        self.surge_spec
+    }
+
     /// Returns an iterator over all samples.
     ///
     /// The channel data is is interleaved. The iterator is streaming. That is,
