@@ -200,7 +200,7 @@ struct ChunkHeader {
 }
 
 /// Specifies properties of the audio data, as well as the layout of the stream.
-#[derive(Clone, Copy)]
+#[derive(Debug,Clone, Copy)]
 pub struct WavSpecEx {
     /// The normal information about the audio data.
     ///
@@ -250,7 +250,7 @@ pub struct SmplSpec {
 
 /// Specifies all audio properties form WavSpecEx, 
 /// with additional properties specified for Surge
-#[derive(Clone, Copy)]
+#[derive(Debug,Clone, Copy)]
 pub struct WavSpecSurge {
     pub specx: WavSpecEx,
     pub clm:   Option<ClmSpec>,
