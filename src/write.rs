@@ -554,19 +554,19 @@ fn read_append<W: io::Read + io::Seek>(mut reader: &mut W) -> Result<(WavSpecSur
     // later.
     let data_len_offset = try!(reader.seek(io::SeekFrom::Current(0))) as u32 - 4;
 
-    let spec = surge_spec.specx.spec;
-    let num_samples = data_len / surge_spec.specx.bytes_per_sample as u32;
+    let spec = surge_spec.specx.unwrap().spec;
+    let num_samples = data_len / surge_spec.specx.unwrap().bytes_per_sample as u32;
 
     // There must not be trailing bytes in the data chunk, otherwise the
     // bytes we write will be off.
-    if num_samples * surge_spec.specx.bytes_per_sample as u32 != data_len {
+    if num_samples * surge_spec.specx.unwrap().bytes_per_sample as u32 != data_len {
         let msg = "data chunk length is not a multiple of sample size";
         return Err(Error::FormatError(msg));
     }
 
     // Hound cannot read or write other bit depths than those, so rather
     // than refusing to write later, fail early.
-    let supported = match (surge_spec.specx.bytes_per_sample, spec.bits_per_sample) {
+    let supported = match (surge_spec.specx.unwrap().bytes_per_sample, spec.bits_per_sample) {
         (1, 8) => true,
         (2, 16) => true,
         (3, 24) => true,
@@ -581,7 +581,7 @@ fn read_append<W: io::Read + io::Seek>(mut reader: &mut W) -> Result<(WavSpecSur
     // The number of samples must be a multiple of the number of channels,
     // otherwise the last inter-channel sample would not have data for all
     // channels.
-    if num_samples % surge_spec.specx.spec.channels as u32 != 0 {
+    if num_samples % surge_spec.specx.unwrap().spec.channels as u32 != 0 {
         return Err(Error::FormatError("invalid data chunk length"));
     }
 
@@ -625,8 +625,8 @@ impl WavWriter<io::BufWriter<fs::File>> {
         let buf_writer = io::BufWriter::new(file);
 
         let writer = WavWriter {
-            spec: surge_spec.specx.spec,
-            bytes_per_sample: surge_spec.specx.bytes_per_sample,
+            spec: surge_spec.specx.unwrap().spec,
+            bytes_per_sample: surge_spec.specx.unwrap().bytes_per_sample,
             writer: buf_writer,
             data_bytes_written: data_len,
             sample_writer_buffer: Vec::new(),
@@ -655,8 +655,8 @@ impl<W> WavWriter<W> where W: io::Read + io::Write + io::Seek {
         let (surge_spec, data_len, data_len_offset) = try!(read_append(&mut writer));
         try!(writer.seek(io::SeekFrom::Current(data_len as i64)));
         let writer = WavWriter {
-            spec: surge_spec.specx.spec,
-            bytes_per_sample: surge_spec.specx.bytes_per_sample,
+            spec: surge_spec.specx.unwrap().spec,
+            bytes_per_sample: surge_spec.specx.unwrap().bytes_per_sample,
             writer: writer,
             data_bytes_written: data_len,
             sample_writer_buffer: Vec::new(),
